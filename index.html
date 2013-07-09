@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Slider Test Page</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <script src="https://raw.github.com/mattbryson/TouchSwipe-Jquery-Plugin/master/jquery.touchSwipe.min.js"></script>
+    <script type="text/javascript" src="jquery.wa72Slider.js"></script>
+    <style type="text/css">
+        #frame {
+            width: 500px;
+            height: 250px;
+            margin: 50px auto;
+            border: 1px solid #666666;
+            box-shadow: 2px 2px 6px 0 #999999;
+        }
+    </style>
+</head>
+<body>
+<div id="frame">
+ <div>Slide 1</div>
+    <div>Slide 2</div>
+    <div style="background-color: green;">Slide 3</div>
+    <div>Slide 4</div>
+    <div>Slide 5</div>
+</div>
+<script type="text/javascript">
+    $('#frame').wa72Slider({
+        //'loop': false
+    });
+</script>
+</body>
+</html>

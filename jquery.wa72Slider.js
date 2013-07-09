@@ -21,21 +21,34 @@
                 noSlides = slides.length,
                 currentSlide = 0,
                 swidth = slideshow.width(),
+                sheight = slideshow.height(),
                 slider_content = $("<div>"),
                 sliding = false,
                 autoplay = null;
+            slideshow.css({
+                'position': 'relative',
+                'overflow': 'hidden'
+            });
 
-            // prepare slider_content element
-            slider_content.append(slides);
+            function _makeSlide(content) {
+                var s = $("<div>");
+                s.width(swidth).height(sheight)
+                    .css({'float': 'left', 'position': 'relative'})
+                    .html(content);
+                return s;
+            }
+            for(var i=0;i<noSlides;i++) {
+               _makeSlide(slides[i]).appendTo(slider_content);
+            }
             if (settings.loop) {
-                slider_content.prepend(slides.last().clone());
-                slider_content.append(slides.first().clone());
+                slider_content.prepend(_makeSlide(slides.last().clone()));
+                slider_content.append(_makeSlide(slides.first().clone()));
             }
             slideshow.empty().append(slider_content);
             slider_content.css({
                 position: 'relative',
-                top: '0',
-                left: '0',
+                top: 0,
+                left: 0,
                 width: ((noSlides + (settings.loop ? 2 : 0)) * swidth) + 'px',
                 height: '100%'
             });
