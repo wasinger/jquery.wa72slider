@@ -1,4 +1,3 @@
-;
 (function ($) {
     function Wa72Slider(frame, settings){
         this.frame = frame;
@@ -47,7 +46,7 @@
             this._fastmove(this._pos(1));
             if (this.settings.autoplay > 0) {
                 var s = this;
-                this.autoplay = setInterval(function(){Wa72Slider.prototype.next.call(s)}, this.settings.autoplay);
+                this.autoplay = window.setInterval(function(){Wa72Slider.prototype.next.call(s);}, this.settings.autoplay);
             }
         },
         'goTo': function(n, duration) {
@@ -55,24 +54,24 @@
             duration = duration ? duration : this.settings.duration;
             this._beforeSwitch();
             if (n < 1) {
-                this.current = (this.settings.loop ? 0 : 1)
+                this.current = (this.settings.loop ? 0 : 1);
             } else if (n > this.nos) {
-                this.current = (this.settings.loop ? this.nos + 1 : this.nos)
+                this.current = (this.settings.loop ? this.nos + 1 : this.nos);
             } else {
                 this.current = n;
             }
             if (this.settings.debug && window.console) window.console.log('Current slide: ' + this.current);
             var s = this;
-            this._move(this._pos(this.current), duration, function(){Wa72Slider.prototype._afterSwitch.call(s)});
+            this._move(this._pos(this.current), duration, function(){Wa72Slider.prototype._afterSwitch.call(s);});
         },
         'next': function(duration) {
-            this.goTo(this.current + 1, duration)
+            this.goTo(this.current + 1, duration);
         },
         'prev': function(duration) {
-            this.goTo(this.current - 1, duration)
+            this.goTo(this.current - 1, duration);
         },
         'on': function(event, callback) {
-            return this.frame.on(event, callback)
+            return this.frame.on(event, callback);
         },
 
         '_pos': function(no) {
@@ -84,7 +83,9 @@
         '_move': function(pos, duration, callback) {
             if (this.settings.csstrans) {
                 this.content.css('transitionDuration', duration + 'ms');
-                if (typeof callback == 'function') this.content.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', callback);
+                if (typeof callback === 'function') {
+                    this.content.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', callback);
+                }
                 this.content.css('transform', 'translate(' + (-pos) + 'px,0) translateZ(0)');
             } else {
                 this.content.animate({'left': (-pos) + 'px'}, duration, callback);
@@ -106,8 +107,8 @@
 
         // callback function after switching slides
         '_afterSwitch': function() {
-            if (this.settings.loop && (this.current == 0 || this.current == this.nos + 1)) {
-                this.current = ((this.current == 0) ? (this.nos) : 1);
+            if (this.settings.loop && (this.current === 0 || this.current === this.nos + 1)) {
+                this.current = ((this.current === 0) ? (this.nos) : 1);
                 if (this.settings.debug && window.console) window.console.log('Looping, current slide: ' + this.current);
                 this._fastmove(this._pos(this.current));
             }
@@ -138,24 +139,24 @@
                 slider = new Wa72Slider(slideframe, settings);
 
             for(var i=0;i<noSlides;i++) {
-               slider.addSlide(slides[i])
+               slider.addSlide(slides[i]);
             }
             slider.show();
 
             // Touch Swipe support: Needs jquery.touchSwipe.js
             if (typeof $.fn.swipe == 'function') {
                 slideframe.on('click', 'a', function(e){e.preventDefault()});
-                function swipeStatus(event, phase, direction, distance, duration) {
+                var swipeStatus = function(event, phase, direction, distance, duration) {
                     if (slider.sliding) return;
                     if (phase == "move" && (direction == "left" || direction == "right")) {
                         duration = 0;
                         if (direction == "left")
                             slider._move((slider._pos(slider.current)) + distance, duration);
                         else if (direction == "right")
-                            slider._move((slider._pos(slider.current)) + distance, duration);
+                            slider._move((slider._pos(slider.current)) - distance, duration);
                     }
 
-                    else if (phase == "end" && distance >= 100) {
+                    else if (phase == "end" && distance >= 50) {
                         if (slider.autoplay) clearInterval(slider.autoplay);
                         if (settings.csstrans) {
                             slider.content.css({
@@ -171,7 +172,7 @@
                         duration = Math.min(settings.duration, settings.duration * distance / slider.width * 2);
                         slider._move(slider._pos(slider.current), duration);
                     }
-                }
+                };
                 var swipeOptions =
                 {
                     triggerOnTouchEnd: true,
@@ -205,14 +206,14 @@
                     display: 'none'
                 }).addClass('wa72slider_nextbutton');
                 slideframe.append(pb).append(nb);
-                function showNavButtons() {
+                var showNavButtons = function() {
                     if (settings.loop || slider.current > 1) pb.show();
                     if (settings.loop || slider.current < (noSlides)) nb.show();
-                }
-                function hideNavButtons() {
+                };
+                var hideNavButtons = function() {
                     pb.hide();
                     nb.hide();
-                }
+                };
                 showNavButtons();
                 slideframe.on('beforeSlide', hideNavButtons).on('afterSlide', showNavButtons);
                 pb.click(function() {
