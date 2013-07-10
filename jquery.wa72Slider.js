@@ -1,3 +1,14 @@
+/**
+ * jQuery wa72Slider
+ *
+ * A slideshow plugin for jQuery for mobile and desktop browsers,
+ * touch enabled when using jquery.touchSwipe.js
+ *
+ * Copyright 2013 Christoph Singer, Web-Agentur 72
+ *
+ * License: MIT
+ *
+ */
 (function ($) {
     function Wa72Slider(frame, settings){
         this.frame = frame;
