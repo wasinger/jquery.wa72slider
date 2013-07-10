@@ -1,10 +1,126 @@
 ;
 (function ($) {
+    function Wa72Slider(frame, settings){
+        this.frame = frame;
+        this.frame.css({
+            'position': 'relative',
+            'overflow': 'hidden'
+        });
+        this.width = this.frame.width();
+        this.height = this.frame.height();
+        this.settings = settings;
+        this.content = $('<div>');
+    }
+    Wa72Slider.prototype = {
+        'nos': 0,
+        'slides': [],
+        'current': 0,
+        'sliding': false,
+
+        'addSlide': function(content) {
+            $('<div>').width(this.width)
+                .css({'float': 'left', 'position': 'relative', 'height': '100%'})
+                .html(content)
+                .appendTo(this.content);
+            this.nos++;
+        },
+        'show': function() {
+            this.frame.empty().append(this.content);
+            if (this.settings.loop) {
+                var fc = this.content.children('div').first().clone();
+                this.content.prepend(this.content.children('div').last().clone());
+                this.content.append(fc);
+            }
+            this.content.css({
+                'position': 'relative', 'top': 0, 'left': 0
+            }).height(this.height).width((this.settings.loop ? this.nos + 2 : this.nos) * this.width);
+            if (this.settings.csstrans) {
+                this.content.css({
+                    "transitionProperty": "transform",
+                    "transitionDuration": this.settings.duration + "ms",
+                    "transitionTimingFunction": this.settings.easingClick,
+                    "transform": "translate3d(0,0,0)"
+                });
+                //this.content.find('img').css("transform", "translate3d(0,0,0)");
+            }
+            this.current = 1;
+            this._fastmove(this._pos(1));
+            if (this.settings.autoplay > 0) {
+                var s = this;
+                this.autoplay = setInterval(function(){Wa72Slider.prototype.next.call(s)}, this.settings.autoplay);
+            }
+        },
+        'goTo': function(n, duration) {
+            if (this.sliding) return;
+            duration = duration ? duration : this.settings.duration;
+            this._beforeSwitch();
+            if (n < 1) {
+                this.current = (this.settings.loop ? 0 : 1)
+            } else if (n > this.nos) {
+                this.current = (this.settings.loop ? this.nos + 1 : this.nos)
+            } else {
+                this.current = n;
+            }
+            if (this.settings.debug && window.console) window.console.log('Current slide: ' + this.current);
+            var s = this;
+            this._move(this._pos(this.current), duration, function(){Wa72Slider.prototype._afterSwitch.call(s)});
+        },
+        'next': function(duration) {
+            this.goTo(this.current + 1, duration)
+        },
+        'prev': function(duration) {
+            this.goTo(this.current - 1, duration)
+        },
+        'on': function(event, callback) {
+            return this.frame.on(event, callback)
+        },
+
+        '_pos': function(no) {
+            if (!this.settings.loop) {
+                no = Math.max(no - 1, 0);
+            }
+            return no * this.width;
+        },
+        '_move': function(pos, duration, callback) {
+            if (this.settings.csstrans) {
+                this.content.css('transitionDuration', duration + 'ms');
+                if (typeof callback == 'function') this.content.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', callback);
+                this.content.css('transform', 'translate(' + (-pos) + 'px,0) translateZ(0)');
+            } else {
+                this.content.animate({'left': (-pos) + 'px'}, duration, callback);
+            }
+        },
+        '_fastmove': function(pos) {
+            if (this.settings.csstrans) {
+                this.content.css('transitionDuration', '0ms');
+                this.content.css('transform', 'translate(' + (-pos) + 'px,0)');
+            } else {
+                this.content.css('left', (-pos) + 'px');
+            }
+        },
+        // callback function before switching slides
+        '_beforeSwitch': function() {
+            this.frame.trigger('beforeSwitch');
+            this.sliding = true;
+        },
+
+        // callback function after switching slides
+        '_afterSwitch': function() {
+            if (this.settings.loop && (this.current == 0 || this.current == this.nos + 1)) {
+                this.current = ((this.current == 0) ? (this.nos) : 1);
+                if (this.settings.debug && window.console) window.console.log('Looping, current slide: ' + this.current);
+                this._fastmove(this._pos(this.current));
+            }
+            this.sliding = false;
+            this.frame.trigger('afterSwitch');
+        }
+    };
+
     $.fn.wa72Slider = function (options) {
 
         var settings = $.extend({
             "duration": 2000,
-            "csstransforms3d": Modernizr.csstransitions && Modernizr.csstransforms3d,
+            "csstrans": Modernizr.csstransitions && Modernizr.csstransforms3d,
             "debug": true,
             "slideselector": "div",
             "loop": true,
@@ -16,157 +132,44 @@
 
         return this.each(function () {
 
-            var slideshow = $(this),
-                slides = slideshow.find(settings.slideselector),
+            var slideframe = $(this),
+                slides = slideframe.find(settings.slideselector),
                 noSlides = slides.length,
-                currentSlide = 0,
-                swidth = slideshow.width(),
-                sheight = slideshow.height(),
-                slider_content = $("<div>"),
-                sliding = false,
-                autoplay = null;
-            slideshow.css({
-                'position': 'relative',
-                'overflow': 'hidden'
-            });
+                slider = new Wa72Slider(slideframe, settings);
 
-            function _makeSlide(content) {
-                var s = $("<div>");
-                s.width(swidth).height(sheight)
-                    .css({'float': 'left', 'position': 'relative'})
-                    .html(content);
-                return s;
-            }
             for(var i=0;i<noSlides;i++) {
-               _makeSlide(slides[i]).appendTo(slider_content);
+               slider.addSlide(slides[i])
             }
-            if (settings.loop) {
-                slider_content.prepend(_makeSlide(slides.last().clone()));
-                slider_content.append(_makeSlide(slides.first().clone()));
-            }
-            slideshow.empty().append(slider_content);
-            slider_content.css({
-                position: 'relative',
-                top: 0,
-                left: 0,
-                width: ((noSlides + (settings.loop ? 2 : 0)) * swidth) + 'px',
-                height: '100%'
-            });
-
-            // use translate3d if available
-            if (settings.csstransforms3d) {
-                slider_content.css({
-                    "transitionProperty": "transform",
-                    "transitionDuration": settings.duration + "ms",
-                    "transitionTimingFunction": settings.easingClick,
-                    "transform": "translate3d(0,0,0)"
-                });
-                //slider_content.find('img').css("transform", "translate3d(0,0,0)");
-            }
-            if (settings.loop) move(pos(0));
-
-            if (settings.autoplay > 0) {
-                autoplay = setInterval(nextImage, settings.autoplay);
-            }
-
-            // callback function before sliding
-            function beforeSlide() {
-                slideshow.trigger('beforeSlide');
-                sliding = true;
-            }
-
-            // callback function after sliding
-            function afterSlide() {
-                if (settings.loop && (currentSlide == -1 || currentSlide == noSlides)) {
-                    currentSlide = ((currentSlide == -1) ? (noSlides - 1) : 0);
-                    if (settings.debug && window.console) window.console.log('Looping, current slide: ' + currentSlide);
-                    move(pos(currentSlide));
-                }
-                sliding = false;
-                slideshow.trigger('afterSlide');
-            }
-
-            function pos(no) {
-                if (settings.loop) {
-                    no = no + 1;
-                }
-                return no * swidth;
-            }
-
-            function move(pos) {
-                if (settings.csstransforms3d) {
-                    slider_content.css({
-                        transitionDuration: '0s',
-                        transform: "translate(" + (-pos) + "px,0)"
-                    });
-                } else {
-                    slider_content.css('left', -pos + 'px');
-                }
-            }
-
-            function previousImage(duration) {
-                if (sliding) return;
-                duration = duration ? duration : settings.duration;
-                currentSlide = Math.max(currentSlide - 1, (settings.loop ? -1 : 0));
-                if (settings.debug && window.console) window.console.log('Current slide: ' + currentSlide);
-                beforeSlide();
-                scrollImages(pos(currentSlide), duration, afterSlide);
-            }
-
-            function nextImage(duration) {
-                if (sliding) return;
-                duration = duration ? duration : settings.duration;
-                currentSlide = Math.min(currentSlide + 1, (settings.loop ? noSlides : noSlides - 1));
-                if (settings.debug && window.console) window.console.log('Current slide: ' + currentSlide);
-                beforeSlide();
-                scrollImages(pos(currentSlide), duration, afterSlide);
-            }
-
-            function scrollImages(distance, duration, callback) {
-                //var value = (distance < 0 ? "" : "-") + Math.abs(distance).toString();
-                var value = -distance;
-                if (settings.csstransforms3d) {
-                    if (settings.debug && window.console) window.console.log('Animate using csstransform: translate3d');
-                    slider_content.css("transitionDuration", duration + "ms");
-                    if (typeof callback == 'function') slider_content.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', callback);
-                    slider_content.css("transform", "translate(" + value + "px,0) translateZ(0)");
-                } else {
-                    if (settings.debug && window.console) window.console.log('Animate using jQuery');
-                    slider_content.animate({'left': value + "px"}, duration, callback);
-                }
-            }
+            slider.show();
 
             // Touch Swipe support: Needs jquery.touchSwipe.js
             if (typeof $.fn.swipe == 'function') {
-                slideshow.on('click', 'a', function(e){e.preventDefault()});
+                slideframe.on('click', 'a', function(e){e.preventDefault()});
                 function swipeStatus(event, phase, direction, distance, duration) {
-                    if (sliding) return;
+                    if (slider.sliding) return;
                     if (phase == "move" && (direction == "left" || direction == "right")) {
                         duration = 0;
-
                         if (direction == "left")
-                            scrollImages((pos(currentSlide)) + distance, duration);
-
+                            slider._move((slider._pos(slider.current)) + distance, duration);
                         else if (direction == "right")
-                            scrollImages((pos(currentSlide)) - distance, duration);
-
+                            slider._move((slider._pos(slider.current)) + distance, duration);
                     }
 
                     else if (phase == "end" && distance >= 100) {
-                        if (autoplay) clearInterval(autoplay);
-                        if (settings.csstransforms3d) {
-                            slider_content.css({
+                        if (slider.autoplay) clearInterval(slider.autoplay);
+                        if (settings.csstrans) {
+                            slider.content.css({
                                 "transitionTimingFunction": settings.easingSwipe
                             });
                         }
-                        duration = Math.min(settings.duration * 2, duration / distance * swidth);
+                        duration = Math.min(settings.duration * 2, duration / distance * slider.width);
                         if (direction == "right")
-                            previousImage(duration);
+                            slider.prev(duration);
                         else if (direction == "left")
-                            nextImage(duration);
+                            slider.next(duration);
                     } else {
-                        duration = Math.min(settings.duration, settings.duration * distance / swidth * 2);
-                        scrollImages(pos(currentSlide), duration);
+                        duration = Math.min(settings.duration, settings.duration * distance / slider.width * 2);
+                        slider._move(slider._pos(slider.current), duration);
                     }
                 }
                 var swipeOptions =
@@ -184,7 +187,7 @@
                         }
                     }
                 };
-                slider_content.swipe(swipeOptions);
+                slider.content.swipe(swipeOptions);
             }
 
             // add navigation buttons
@@ -201,33 +204,34 @@
                     right: 0,
                     display: 'none'
                 }).addClass('wa72slider_nextbutton');
-                slideshow.append(pb).append(nb);
+                slideframe.append(pb).append(nb);
                 function showNavButtons() {
-                    if (settings.loop || currentSlide > 0) pb.show();
-                    if (settings.loop || currentSlide < (noSlides - 1)) nb.show();
+                    if (settings.loop || slider.current > 1) pb.show();
+                    if (settings.loop || slider.current < (noSlides)) nb.show();
                 }
                 function hideNavButtons() {
                     pb.hide();
                     nb.hide();
                 }
                 showNavButtons();
-                slideshow.on('beforeSlide', hideNavButtons).on('afterSlide', showNavButtons);
+                slideframe.on('beforeSlide', hideNavButtons).on('afterSlide', showNavButtons);
                 pb.click(function() {
-                    if (autoplay) clearInterval(autoplay);
-                    if (settings.csstransforms3d) {
-                        slider_content.css({
+                    if (slider.autoplay) clearInterval(slider.autoplay);
+                    if (settings.csstrans) {
+                        slider.content.css({
                             "transitionTimingFunction": settings.easingClick
                         });
                     }
-                    previousImage(settings.duration); });
+                    slider.prev(settings.duration);
+                });
                 nb.click(function() {
-                    if (autoplay) clearInterval(autoplay);
-                    if (settings.csstransforms3d) {
-                        slider_content.css({
+                    if (slider.autoplay) clearInterval(slider.autoplay);
+                    if (settings.csstrans) {
+                        slider.content.css({
                             "transitionTimingFunction": settings.easingClick
                         });
                     }
-                    nextImage(settings.duration);
+                    slider.next(settings.duration);
                 });
             }
         });
