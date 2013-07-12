@@ -2,7 +2,7 @@
  * jQuery wa72Slider
  *
  * A slideshow plugin for jQuery for mobile and desktop browsers,
- * touch enabled when using jquery.touchSwipe.js
+ * supports touch swipe using jquery.touchSwipe.js (https://github.com/mattbryson/TouchSwipe-Jquery-Plugin)
  *
  * Copyright 2013 Christoph Singer, Web-Agentur 72
  *
@@ -19,7 +19,7 @@
         this.width = this.frame.width();
         this.height = this.frame.height();
         this.settings = settings;
-        this.content = $('<div>');
+        this.content = $('<div class="wa72slider_content">');
     }
     Wa72Slider.prototype = {
         'nos': 0,
@@ -28,8 +28,8 @@
         'sliding': false,
 
         'addSlide': function(content) {
-            $('<div>').width(this.width)
-                .css({'float': 'left', 'position': 'relative', 'height': '100%'})
+            $('<div class="wa72slider_slide">').width(this.width)
+                .css({'float': 'left', 'position': 'relative', 'height': '100%', 'overflow': 'hidden'})
                 .html(content)
                 .appendTo(this.content);
             this.nos++;
@@ -51,7 +51,7 @@
                     "transitionTimingFunction": this.settings.easingClick,
                     "transform": "translate3d(0,0,0)"
                 });
-                //this.content.find('img').css("transform", "translate3d(0,0,0)");
+                this.content.find('img').css("transform", "translate3d(0,0,0)");
             }
             this.current = 1;
             this._fastmove(this._pos(1));
@@ -159,6 +159,13 @@
                 slideframe.on('click', 'a', function(e){e.preventDefault()});
                 var swipeStatus = function(event, phase, direction, distance, duration) {
                     if (slider.sliding) return;
+
+                    var target = $(event.target);
+                    if (target.hasClass('wa72slide_image')) {
+                        // TODO: panning of zoomed image
+                    }
+
+
                     if (phase == "move" && (direction == "left" || direction == "right")) {
                         duration = 0;
                         if (direction == "left")
@@ -184,8 +191,7 @@
                         slider._move(slider._pos(slider.current), duration);
                     }
                 };
-                var swipeOptions =
-                {
+                slider.content.swipe({
                     triggerOnTouchEnd: true,
                     swipeStatus: swipeStatus,
                     allowPageScroll: "vertical",
@@ -198,9 +204,28 @@
                             window.location.href = a.attr("href");
                         }
                     }
-                };
-                slider.content.swipe(swipeOptions);
+
+                });
+                // TODO: pan & zoom support
+                /*$('img.wa72slide_image').swipe({
+                    pinchIn: function(event, direction, distance, duration, fingerCount, pinchZoom)
+                    {
+                        $(event.target).css('transform', 'scale('+pinchZoom+','+pinchZoom+')');
+                    },
+                    pinchOut: function(event, direction, distance, duration, fingerCount, pinchZoom)
+                    {
+                        $(event.target).css('transform', 'scale('+pinchZoom+','+pinchZoom+')');
+                    },
+                    fingers: 2
+                })*/
             }
+
+            // Pan Zoom Support: Needs jquery.panzoom.js
+            /*if (typeof $.fn.panzoom == 'function') {
+                $('.wa72slide_image').panzoom({
+                    'contain': 'invert'
+                });
+            }*/
 
             // add navigation buttons
             if (settings.showNavButtons) {
