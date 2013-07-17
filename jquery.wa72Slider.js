@@ -145,7 +145,7 @@
             "duration": 2000,
             "csstrans": Modernizr.csstransitions && Modernizr.csstransforms3d,
             "debug": true,
-            "slideselector": "div",
+            "slideselector": "div, img",
             "loop": true,
             "autoplay": 5000,
             "showNavButtons": true,
@@ -157,7 +157,7 @@
         return this.each(function () {
 
             var slideframe = $(this),
-                slides = slideframe.find(settings.slideselector),
+                slides = slideframe.children(settings.slideselector),
                 noSlides = slides.length,
                 slider = new Wa72Slider(slideframe, settings);
 
@@ -172,12 +172,17 @@
                 var swipeStatus = function(event, phase, direction, distance, duration) {
                     if (slider.sliding) return;
 
-                    var target = $(event.target);
-                    if (target.hasClass('wa72slide_image')) {
+                    var $target = $(event.target);
+                    if ($target.hasClass('wa72slide_image')) {
                         // TODO: panning of zoomed image
+                        var matrix = $target.wa72zoomer('getMatrix');
+                        window.console.dir(matrix);
+                        var scale = +matrix[0];
+                        if (scale > 1) {
+                            $target.wa72zoomer('pan', (direction == "left" ? -distance : +distance), 0, {'relative': true});
+                            return;
+                        }
                     }
-
-
                     if (phase == "move" && (direction == "left" || direction == "right")) {
                         duration = 0;
                         if (direction == "left")
@@ -206,7 +211,7 @@
                 slider.content.swipe({
                     triggerOnTouchEnd: true,
                     swipeStatus: swipeStatus,
-                    allowPageScroll: "vertical",
+                    //allowPageScroll: "vertical",
                     threshold: 50,
                     cancelTreshold: 15,
                     excludedElements: '',
