@@ -11,9 +11,6 @@
 (function ($) {
     var dataname = 'wa72zoomer';
 
-    var slice = Array.prototype.slice;
-    var rupper = /([A-Z])/g;
-    var rsvg = /^http:[\w\.\/]+svg$/;
     var floating = '(\\-?[\\d\\.e]+)';
     var commaSpace = '\\,?\\s*';
     var rmatrix = new RegExp(
@@ -42,7 +39,7 @@
 
         // This is SVG if the namespace is SVG
         // However, while <svg> elements are SVG, we want to treat those like other elements
-        this.isSVG = rsvg.test( e.namespaceURI ) && e.nodeName.toLowerCase() !== 'svg';
+        this.isSVG = /^http:[\w\.\/]+svg$/.test( e.namespaceURI ) && e.nodeName.toLowerCase() !== 'svg';
 
         this.panning = false;
 
@@ -51,7 +48,7 @@
         this._buildTransform();
         // Build the appropriately-prefixed transform style property name
         // De-camelcase
-        this._transform = $.cssProps.transform.replace( rupper, '-$1' ).toLowerCase();
+        this._transform = $.cssProps.transform.replace( /([A-Z])/g, '-$1' ).toLowerCase();
         // Build the transition value
         this._buildTransition();
 
@@ -62,7 +59,17 @@
         return this;
     }
 
-    Zoomer.settings = {};
+    Zoomer.settings = {
+        eventNamespace: '.wa72zoomer',
+        transition: true,
+        increment: 0.3,
+        minScale: 0.4,
+        maxScale: 5,
+        duration: 200,
+        easing: 'ease-in-out',
+        contain: 'invert',
+        startTransform: undefined
+    };
 
     Zoomer.prototype = {
         /**
@@ -111,9 +118,7 @@
             // Set the scale
             matrix[0] = matrix[3] = scale;
             this.setMatrix( matrix, {
-                animate: typeof opts.animate === 'boolean' ? opts.animate : animate,
-                // Set the zoomRange value
-                range: !opts.noSetRange
+                animate: typeof opts.animate === 'boolean' ? opts.animate : animate
             });
 
             // Trigger zoom event
@@ -160,9 +165,7 @@
         reset: function( animate ) {
             // Reset the transform to its original value
             var matrix = this.setMatrix( this._origTransform, {
-                animate: typeof animate !== 'boolean' || animate,
-                // Set zoomRange value
-                range: true
+                animate: typeof animate !== 'boolean' || animate
             });
             this._trigger( 'reset', matrix );
         },
@@ -219,13 +222,15 @@
             }
             return matrix || [ 1, 0, 0, 1, 0, 0 ];
         },
+        isZoomed: function() {
+            return this.getMatrix()[0] !== 1;
+        },
         /**
          * Given a matrix object, quickly set the current matrix of the element
          * @param {Array|String} matrix
          * @param {Object} [options]
          * @param {Boolean|String} [options.animate] Whether to animate the transform change, or 'skip' indicating that it is unnecessary to set
          * @param {Boolean} [options.contain] Override the global contain option
-         * @param {Boolean} [options.range] If true, $zoomRange's value will be updated.
          * @param {Boolean} [options.silent] If true, the change event will not be triggered
          * @returns {Array} Returns the matrix that was set
          * @author timmy willison
@@ -259,10 +264,6 @@
             if ( options.animate !== 'skip' ) {
             // Set transition
                 this.transition( !options.animate );
-            }
-            // Update range
-            if ( options.range ) {
-                this.$zoomRange.val( scale );
             }
             $[ this.isSVG ? 'attr' : 'style' ]( this.elem, 'transform', 'matrix(' + matrix.join(',') + ')' );
             if ( !options.silent ) {
@@ -342,43 +343,38 @@
                 cur[ indices[i] ] = origMatrix[ indices[i] ];
             }
             this.setMatrix(cur, {
-                animate: typeof animate !== 'boolean' || animate,
-                // Set zoomRange value
-                range: true
+                animate: typeof animate !== 'boolean' || animate
             });
         },
 
         /**
-         * Trigger a panzoom event on our element
-         * The event is passed the Panzoom instance
+         * Trigger a zoomer event on our element
+         * The event is passed the Zoomer instance
          * @param {String} name
          * @param {Mixed} arg1[, arg2, arg3, ...] Arguments to append to the trigger
          * @author timmy willison
          */
         _trigger: function ( name ) {
-            this.$elem.triggerHandler( 'panzoom' + name, [this].concat(slice.call( arguments, 1 )) );
+            this.$elem.triggerHandler( 'zoomer' + name, [this].concat(Array.prototype.slice.call( arguments, 1 )) );
         }
     };
 
     $.fn.wa72zoomer = function( options ) {
-        var instance, args, m, ret;
+        var instance, args, m, r;
         if ( typeof options === 'string' ) {
-            ret = [];
+            r = [];
             args = Array.prototype.slice.call( arguments, 1 );
             this.each(function() {
                 instance = $.data(this, dataname);
                 if ( !instance ) {
-                    ret.push( undefined );
-                // Ignore methods beginning with '_'
-                } else if (options.charAt(0) !== '_' &&
-                    typeof (m = instance[ options ]) === 'function' &&
-                    (m = m.apply( instance, args )) !== undefined) {
-                    ret.push( m );
+                    r.push( undefined );
+                } else if (options.charAt(0) !== '_' // Ignore methods beginning with '_'
+                    && typeof (m = instance[ options ]) === 'function'
+                    && (m = m.apply( instance, args )) !== undefined) {
+                    r.push( m );
                 }
             });
-            return ret.length ?
-                (ret.length === 1 ? ret[0] : ret) :
-                this;
+            return r.length ? (r.length === 1 ? r[0] : r) : this;
         }
         return this.each(function() { new Zoomer( this, options ); });
     };

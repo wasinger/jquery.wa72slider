@@ -3,6 +3,7 @@
  *
  * A slideshow plugin for jQuery for mobile and desktop browsers,
  * supports touch swipe using jquery.touchSwipe.js (https://github.com/mattbryson/TouchSwipe-Jquery-Plugin)
+ * and mouse wheel using jquery.mousewheel.js (https://github.com/brandonaaron/jquery-mousewheel)
  *
  * Copyright 2013 Christoph Singer, Web-Agentur 72
  *
@@ -28,10 +29,11 @@
         'sliding': false,
 
         'addSlide': function(content) {
-            $('<div class="wa72slider_slide">').width(this.width)
+            var slide = $('<div class="wa72slider_slide">').width(this.width)
                 .css({'float': 'left', 'position': 'relative', 'height': '100%', 'overflow': 'hidden'})
                 .html(content)
                 .appendTo(this.content);
+            this.slides.unshift(slide);
             this.nos++;
         },
         'show': function() {
@@ -83,6 +85,15 @@
         },
         'on': function(event, callback) {
             return this.frame.on(event, callback);
+        },
+        'getCurrentSlide': function() {
+            return this.slides[this.current - 1];
+        },
+        'getPrevSlide': function() {
+            return this.slides[this.current - 2];
+        },
+        'getNextSlide': function() {
+            return this.slides[this.current];
         },
 
         '_pos': function(no) {
@@ -139,7 +150,8 @@
             "autoplay": 5000,
             "showNavButtons": true,
             "easingClick": "cubic-bezier(.19, 0, .42, 1)",
-            "easingSwipe": "cubic-bezier(.25, .46, .45, .94)"
+            "easingSwipe": "cubic-bezier(.25, .46, .45, .94)",
+            "panZoomImages": true
         }, options);
 
         return this.each(function () {
@@ -207,25 +219,47 @@
 
                 });
                 // TODO: pan & zoom support
-                /*$('img.wa72slide_image').swipe({
-                    pinchIn: function(event, direction, distance, duration, fingerCount, pinchZoom)
-                    {
-                        $(event.target).css('transform', 'scale('+pinchZoom+','+pinchZoom+')');
-                    },
-                    pinchOut: function(event, direction, distance, duration, fingerCount, pinchZoom)
-                    {
-                        $(event.target).css('transform', 'scale('+pinchZoom+','+pinchZoom+')');
-                    },
-                    fingers: 2
-                })*/
+                if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function') {
+                    slideframe.on('afterSwitch', function() {
+                        slider.content.find('img.wa72slide_image').wa72zoomer('reset');
+                        var $cs = slider.getCurrentSlide().find('img.wa72slide_image');
+                        if ($cs.length) {
+                            var i = new Image;
+                            i.src = $cs.attr('src');
+                            i.onload = function(){
+                                // allow maxScale up to the pixel dimensions of the original image
+                                var maxScale = Math.max(i.width / $cs.width(), i.height / $cs.height());
+                                $cs.wa72zoomer({
+                                    'minScale': 1,
+                                    'maxScale': maxScale
+                                });
+                                $cs.swipe({
+                                    pinchIn: function(event, direction, distance, duration, fingerCount, pinchZoom)
+                                    {
+                                        $cs.wa72zoomer('zoom', pinchZoom);
+                                    },
+                                    pinchOut: function(event, direction, distance, duration, fingerCount, pinchZoom)
+                                    {
+                                        $cs.wa72zoomer('zoom', pinchZoom);
+                                    },
+                                    fingers: 2
+                                });
+                                if (typeof $.fn.mousewheel == 'function') {
+                                    $cs.mousewheel(function(event, delta, deltaX, deltaY) {
+                                        if (deltaY > 0) {
+                                            $cs.wa72zoomer('zoom', false,
+                                                {'middle': {pageX: event.pageX, pageY: event.pageY}});
+                                        } else {
+                                            $cs.wa72zoomer('zoom', true,
+                                                {'middle': {pageX: event.pageX, pageY: event.pageY}});
+                                        }
+                                    });
+                                }
+                            };
+                        }
+                    });
+                }
             }
-
-            // Pan Zoom Support: Needs jquery.panzoom.js
-            /*if (typeof $.fn.panzoom == 'function') {
-                $('.wa72slide_image').panzoom({
-                    'contain': 'invert'
-                });
-            }*/
 
             // add navigation buttons
             if (settings.showNavButtons) {
