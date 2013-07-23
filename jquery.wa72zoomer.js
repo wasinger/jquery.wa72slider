@@ -222,9 +222,25 @@
             }
             return matrix || [ 1, 0, 0, 1, 0, 0 ];
         },
-        isZoomed: function() {
-            return this.getMatrix()[0] !== 1;
+        /**
+         * Checks whether the current zoom level of the element is greater than the initial zoom level
+         * @returns {boolean}
+         */
+        isZoomedIn: function() {
+            return +this.getMatrix()[0] > +this.getMatrix(this._origTransform)[0];
         },
+
+        /**
+         * toggle between initial scale and max zoom
+         */
+        toggleZoom: function() {
+            if (this.isZoomedIn()) {
+                this.resetZoom(true);
+            }  else {
+                this.zoom(this.options.maxScale, {'animate': true});
+            }
+        },
+
         /**
          * Given a matrix object, quickly set the current matrix of the element
          * @param {Array|String} matrix

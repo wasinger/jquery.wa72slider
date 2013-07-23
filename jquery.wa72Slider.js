@@ -169,18 +169,25 @@
             // Touch Swipe support: Needs jquery.touchSwipe.js
             if (typeof $.fn.swipe == 'function') {
                 slideframe.on('click', 'a', function(e){e.preventDefault()});
+                var matrix, scale;
                 var swipeStatus = function(event, phase, direction, distance, duration) {
                     if (slider.sliding) return;
 
                     var $target = $(event.target);
-                    if ($target.hasClass('wa72slide_image')) {
-                        // TODO: panning of zoomed image
-                        var matrix = $target.wa72zoomer('getMatrix');
-                        window.console.dir(matrix);
-                        var scale = +matrix[0];
-                        if (scale > 1) {
-                            $target.wa72zoomer('pan', (direction == "left" ? -distance : +distance), 0, {'relative': true});
+                    if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function' && $target.hasClass('wa72slide_image')) {
+                        // panning of zoomed image
+                        if (phase == 'start') {
+                            matrix = $target.wa72zoomer('getMatrix');
+                            scale = +matrix[0];
                             return;
+                        } else if (phase == 'move' || phase == 'end' && scale > 1) {
+                            var x = +matrix[4] + (direction == "left" ? -distance : (direction == "right" ? +distance : 0));
+                            var y = +matrix[5] + (direction == "up" ? -distance : (direction == "down" ? +distance : 0));
+                            //window.console.log('pan: ' + x + ";" + y);
+                            $target.wa72zoomer('pan',  x,  y, {'relative': false, 'animate': false});
+                            if ($target.wa72zoomer('getMatrix')[4] != matrix[4]) {
+                                return;
+                            }
                         }
                     }
                     if (phase == "move" && (direction == "left" || direction == "right")) {
@@ -211,7 +218,7 @@
                 slider.content.swipe({
                     triggerOnTouchEnd: true,
                     swipeStatus: swipeStatus,
-                    //allowPageScroll: "vertical",
+                    allowPageScroll: 'none',
                     threshold: 50,
                     cancelTreshold: 15,
                     excludedElements: '',
@@ -220,10 +227,15 @@
                         if (a.length == 1) {
                             window.location.href = a.attr("href");
                         }
+                    },
+                    doubleTap: function(event, target) {
+                        var $target = $(target);
+                        if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function' && $target.hasClass('wa72slide_image')) {
+                            $target.wa72zoomer('toggleZoom');
+                        }
                     }
 
                 });
-                // TODO: pan & zoom support
                 if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function') {
                     slideframe.on('afterSwitch', function() {
                         slider.content.find('img.wa72slide_image').wa72zoomer('reset');
