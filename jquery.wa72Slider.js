@@ -11,8 +11,17 @@
  *
  */
 (function ($) {
-    function Wa72Slider(frame, settings){
-        this.frame = frame;
+    var dataname = 'wa72slider';
+
+    function Wa72Slider(frame, slides, settings){
+        var instance = $.data(frame, dataname);
+        if (instance && instance instanceof Wa72Slider) {
+            return instance;
+        }
+        if (!(this instanceof Wa72Slider)) {
+            return new Wa72Slider(frame, slides, settings);
+        }
+        this.frame = $(frame);
         this.frame.css({
             'position': 'relative',
             'overflow': 'hidden'
@@ -21,6 +30,16 @@
         this.height = this.frame.height();
         this.settings = settings;
         this.content = $('<div class="wa72slider_content">');
+        for(var i=0;i<slides.length;i++) {
+            this._addSlide(slides[i]);
+        }
+        this._show();
+        // add navigation buttons
+        if (settings.showNavButtons) {
+            this._addNavigationButtons();
+        }
+        $.data(frame, dataname, this);
+        return this;
     }
     Wa72Slider.prototype = {
         'nos': 0,
@@ -28,40 +47,7 @@
         'current': 0,
         'sliding': false,
 
-        'addSlide': function(content) {
-            var slide = $('<div class="wa72slider_slide">').width(this.width)
-                .css({'float': 'left', 'position': 'relative', 'height': '100%', 'overflow': 'hidden'})
-                .html(content)
-                .appendTo(this.content);
-            this.slides.unshift(slide);
-            this.nos++;
-        },
-        'show': function() {
-            this.frame.empty().append(this.content);
-            if (this.settings.loop) {
-                var fc = this.content.children('div').first().clone();
-                this.content.prepend(this.content.children('div').last().clone());
-                this.content.append(fc);
-            }
-            this.content.css({
-                'position': 'relative', 'top': 0, 'left': 0
-            }).height(this.height).width((this.settings.loop ? this.nos + 2 : this.nos) * this.width);
-            if (this.settings.csstrans) {
-                this.content.css({
-                    "transitionProperty": "transform",
-                    "transitionDuration": this.settings.duration + "ms",
-                    "transitionTimingFunction": this.settings.easingClick,
-                    "transform": "translate3d(0,0,0)"
-                });
-                this.content.find('img').css("transform", "translate3d(0,0,0)");
-            }
-            this.current = 1;
-            this._fastmove(this._pos(1));
-            if (this.settings.autoplay > 0) {
-                var s = this;
-                this.autoplay = window.setInterval(function(){Wa72Slider.prototype.next.call(s);}, this.settings.autoplay);
-            }
-        },
+
         'goTo': function(n, duration) {
             if (this.sliding) return;
             duration = duration ? duration : this.settings.duration;
@@ -94,6 +80,41 @@
         },
         'getNextSlide': function() {
             return this.slides[this.current];
+        },
+
+        "_addSlide": function(content) {
+            var slide = $('<div class="wa72slider_slide">').width(this.width)
+                .css({'float': 'left', 'position': 'relative', 'height': '100%', 'overflow': 'hidden'})
+                .html(content)
+                .appendTo(this.content);
+            this.slides.unshift(slide);
+            this.nos++;
+        },
+        "_show": function() {
+            this.frame.empty().append(this.content);
+            if (this.settings.loop) {
+                var fc = this.content.children('div.wa72slider_slide').first().clone();
+                this.content.prepend(this.content.children('div.wa72slider_slide').last().clone());
+                this.content.append(fc);
+            }
+            this.content.css({
+                'position': 'relative', 'top': 0, 'left': 0
+            }).height(this.height).width((this.settings.loop ? this.nos + 2 : this.nos) * this.width);
+            if (this.settings.csstrans) {
+                this.content.css({
+                    "transitionProperty": "transform",
+                    "transitionDuration": this.settings.duration + "ms",
+                    "transitionTimingFunction": this.settings.easingClick,
+                    "transform": "translate3d(0,0,0)"
+                });
+                this.content.find('img').css("transform", "translate3d(0,0,0)");
+            }
+            this.current = 1;
+            this._fastmove(this._pos(1));
+            if (this.settings.autoplay > 0) {
+                var s = this;
+                this.autoplay = window.setInterval(function(){Wa72Slider.prototype.next.call(s);}, this.settings.autoplay);
+            }
         },
 
         '_pos': function(no) {
@@ -136,6 +157,51 @@
             }
             this.sliding = false;
             this.frame.trigger('afterSwitch');
+        },
+        '_addNavigationButtons': function() {
+            var slider = this;
+            var pb = $('<div>');
+            pb.css({
+                position: 'absolute',
+                left: 0,
+                display: 'none'
+            }).addClass('wa72slider_prevbutton');
+            var nb = $('<div>');
+            nb.css({
+                position: 'absolute',
+                right: 0,
+                display: 'none'
+            }).addClass('wa72slider_nextbutton');
+            this.frame.append(pb).append(nb);
+            var showNavButtons = function() {
+                if (slider.settings.loop || slider.current > 1) pb.show();
+                if (slider.settings.loop || slider.current < (slider.nos)) nb.show();
+            };
+            var hideNavButtons = function() {
+                pb.hide();
+                nb.hide();
+            };
+            showNavButtons();
+            this.frame.on('beforeSwitch', hideNavButtons).on('afterSwitch', showNavButtons);
+
+            pb.click(function() {
+                if (slider.autoplay) clearInterval(slider.autoplay);
+                if (slider.settings.csstrans) {
+                    slider.content.css({
+                        "transitionTimingFunction": slider.settings.easingClick
+                    });
+                }
+                slider.prev(slider.settings.duration);
+            });
+            nb.click(function() {
+                if (slider.autoplay) clearInterval(slider.autoplay);
+                if (slider.settings.csstrans) {
+                    slider.content.css({
+                        "transitionTimingFunction": slider.settings.easingClick
+                    });
+                }
+                slider.next(slider.settings.duration);
+            });
         }
     };
 
@@ -159,12 +225,9 @@
             var slideframe = $(this),
                 slides = slideframe.children(settings.slideselector),
                 noSlides = slides.length,
-                slider = new Wa72Slider(slideframe, settings);
+                slider = new Wa72Slider(this, slides, settings);
 
-            for(var i=0;i<noSlides;i++) {
-               slider.addSlide(slides[i]);
-            }
-            slider.show();
+
 
             // Touch Swipe support: Needs jquery.touchSwipe.js
             if (typeof $.fn.swipe == 'function') {
@@ -276,51 +339,6 @@
                         }
                     });
                 }
-            }
-
-            // add navigation buttons
-            if (settings.showNavButtons) {
-                var pb = $('<div>');
-                pb.css({
-                    position: 'absolute',
-                    left: 0,
-                    display: 'none'
-                }).addClass('wa72slider_prevbutton');
-                var nb = $('<div>');
-                nb.css({
-                    position: 'absolute',
-                    right: 0,
-                    display: 'none'
-                }).addClass('wa72slider_nextbutton');
-                slideframe.append(pb).append(nb);
-                var showNavButtons = function() {
-                    if (settings.loop || slider.current > 1) pb.show();
-                    if (settings.loop || slider.current < (noSlides)) nb.show();
-                };
-                var hideNavButtons = function() {
-                    pb.hide();
-                    nb.hide();
-                };
-                showNavButtons();
-                slideframe.on('beforeSlide', hideNavButtons).on('afterSlide', showNavButtons);
-                pb.click(function() {
-                    if (slider.autoplay) clearInterval(slider.autoplay);
-                    if (settings.csstrans) {
-                        slider.content.css({
-                            "transitionTimingFunction": settings.easingClick
-                        });
-                    }
-                    slider.prev(settings.duration);
-                });
-                nb.click(function() {
-                    if (slider.autoplay) clearInterval(slider.autoplay);
-                    if (settings.csstrans) {
-                        slider.content.css({
-                            "transitionTimingFunction": settings.easingClick
-                        });
-                    }
-                    slider.next(settings.duration);
-                });
             }
         });
     }
