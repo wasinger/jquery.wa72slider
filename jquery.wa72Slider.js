@@ -165,13 +165,13 @@
                 position: 'absolute',
                 left: 0,
                 display: 'none'
-            }).addClass('wa72slider_prevbutton');
+            }).addClass('wa72slider_navbutton wa72slider_prevbutton');
             var nb = $('<div>');
             nb.css({
                 position: 'absolute',
                 right: 0,
                 display: 'none'
-            }).addClass('wa72slider_nextbutton');
+            }).addClass('wa72slider_navbutton wa72slider_nextbutton');
             this.frame.append(pb).append(nb);
             var showNavButtons = function() {
                 if (slider.settings.loop || slider.current > 1) pb.show();
@@ -224,7 +224,6 @@
 
             var slideframe = $(this),
                 slides = slideframe.children(settings.slideselector),
-                noSlides = slides.length,
                 slider = new Wa72Slider(this, slides, settings);
 
 
