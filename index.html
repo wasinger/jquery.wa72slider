@@ -10,6 +10,7 @@
     <script type="text/javascript" src="wa72Slider.js"></script>
     <script type="text/javascript" src="jquery.wa72zoomer.js"></script>
     <script type="text/javascript" src="jquery.wa72Slider.js"></script>
+    <script type="text/javascript" src="jquery.wa72SwipeGallery.js"></script>
     <style type="text/css">
         #frame {
             width: 500px;
@@ -35,6 +36,7 @@
     </style>
 </head>
 <body>
+<h1>Content Slider</h1>
 <div id="frame">
  <div>Slide 1</div>
     <div>Slide 2</div>
@@ -43,9 +45,34 @@
     <img class="wa72slide_image" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Cabo_Espichel%2C_Portugal%2C_2012-08-18%2C_DD_08.JPG/1280px-Cabo_Espichel%2C_Portugal%2C_2012-08-18%2C_DD_08.JPG" title="von Poco a poco (Eigenes Werk) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons" style="max-height: 100%; max-width: 100%; margin: auto;">
     <div>Slide 6</div>
 </div>
+    <h1>Gallery</h1>
+    <ul class="gallery">
+        <li>
+            <a href="http://upload.wikimedia.org/wikipedia/commons/2/21/Neophron_percnopterus_-_01.jpg"
+               title="By Kadellar (Own work) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Neophron_percnopterus_-_01.jpg/256px-Neophron_percnopterus_-_01.jpg">
+            </a>
+        </li>
+        <li>
+            <a href="http://upload.wikimedia.org/wikipedia/commons/7/7f/Isla_Pan_de_Azucar.jpg"
+               title="By Bachelot Pierre J-P (Own work) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Isla_Pan_de_Azucar.jpg/256px-Isla_Pan_de_Azucar.jpg">
+            </a>
+        </li>
+        <li>
+            <a href="http://upload.wikimedia.org/wikipedia/commons/4/49/Lago_di_Salina.jpg"
+               title="By Ghost-in-the-Shell (Lago di Salina  Uploaded by Markos90) [CC-BY-2.0 (http://creativecommons.org/licenses/by/2.0)], via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Lago_di_Salina.jpg/256px-Lago_di_Salina.jpg">
+            </a>
+        </li>
+    </ul>
 <script type="text/javascript">
     $('#frame').wa72Slider({
         //'loop': false
+    });
+
+    $('ul.gallery a').wa72SwipeGallery({
+
     });
     $('.wa72slider_nextbutton').html('›');
     $('.wa72slider_prevbutton').html('‹');

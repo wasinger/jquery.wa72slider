@@ -1,7 +1,7 @@
 /**
- * jQuery wa72Slider
+ * jQuery.wa72Slider
  *
- * A swipe slider plugin for jQuery for mobile and desktop browsers,
+ * A content slider plugin for jQuery for mobile and desktop browsers,
  * supports touch swipe using jquery.touchSwipe.js (https://github.com/mattbryson/TouchSwipe-Jquery-Plugin)
  *
  * Copyright 2013 Christoph Singer, Web-Agentur 72
@@ -16,8 +16,25 @@
         factory(jQuery, root.wa72Slider);
     }
 } (this, function ($, Slider) {
-    $.fn.wa72Slider = function (options) {
+    var dataname = 'wa72slider';
 
+    $.fn.wa72Slider = function( options ) {
+        var si, args, m, r;
+        if (typeof options === 'string') {
+            r = [];
+            args = Array.prototype.slice.call(arguments, 1);
+            this.each(function() {
+                si = $.data(this, dataname);
+                if (!si) {
+                    r.push( undefined );
+                } else if (options.charAt(0) !== '_' // Ignore methods beginning with '_'
+                    && typeof (m = si[options]) === 'function'
+                    && (m = m.apply(si, args)) !== undefined) {
+                    r.push(m);
+                }
+            });
+            return r.length ? (r.length === 1 ? r[0] : r) : this;
+        }
         var settings = $.extend({
             "duration": 2000,
             "csstrans": Modernizr.csstransitions && Modernizr.csstransforms3d,
@@ -27,40 +44,25 @@
             "autoplay": 5000,
             "showNavButtons": true,
             "easingClick": "cubic-bezier(.19, 0, .42, 1)",
-            "easingSwipe": "cubic-bezier(.25, .46, .45, .94)",
-            "panZoomImages": true
+            "easingSwipe": "cubic-bezier(.25, .46, .45, .94)"
         }, options);
 
-        return this.each(function () {
+        settings.easing = settings.easingClick;
 
+        return this.each(function () {
+            var slider = $.data(this, dataname);
+            if (slider && slider instanceof Slider) {
+                return slider;
+            }
             var slideframe = $(this),
-                slides = slideframe.children(settings.slideselector),
-                slider = new Slider(this, slides, settings);
+                slides = slideframe.children(settings.slideselector);
+            slider = new Slider(this, slides, settings);
 
             // Touch Swipe support: Needs jquery.touchSwipe.js
             if (typeof $.fn.swipe == 'function') {
                 slideframe.on('click', 'a', function(e){e.preventDefault()});
-                var matrix, scale;
                 var swipeStatus = function(event, phase, direction, distance, duration) {
                     if (slider.sliding) return;
-
-                    var $target = $(event.target);
-                    if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function' && $target.hasClass('wa72slide_image')) {
-                        // panning of zoomed image
-                        if (phase == 'start') {
-                            matrix = $target.wa72zoomer('getMatrix');
-                            scale = +matrix[0];
-                            return;
-                        } else if (phase == 'move' || phase == 'end' && scale > 1) {
-                            var x = +matrix[4] + (direction == "left" ? -distance : (direction == "right" ? +distance : 0));
-                            var y = +matrix[5] + (direction == "up" ? -distance : (direction == "down" ? +distance : 0));
-                            //window.console.log('pan: ' + x + ";" + y);
-                            $target.wa72zoomer('pan',  x,  y, {'relative': false, 'animate': false});
-                            if ($target.wa72zoomer('getMatrix')[4] != matrix[4]) {
-                                return;
-                            }
-                        }
-                    }
                     if (phase == "move" && (direction == "left" || direction == "right")) {
                         duration = 0;
                         if (direction == "left")
@@ -68,8 +70,7 @@
                         else if (direction == "right")
                             slider._move((slider._pos(slider.current)) - distance, duration);
                     }
-
-                    else if (phase == "end" && distance >= 50) {
+                    else if (phase == "end" && distance >= 75) {
                         if (slider.autoplay) clearInterval(slider.autoplay);
                         if (settings.csstrans) {
                             slider.content.css({
@@ -89,8 +90,8 @@
                 slider.content.swipe({
                     triggerOnTouchEnd: true,
                     swipeStatus: swipeStatus,
-                    allowPageScroll: 'none',
-                    threshold: 50,
+                    allowPageScroll: 'vertical',
+                    threshold: 75,
                     cancelTreshold: 15,
                     excludedElements: '',
                     tap: function(event, target) {
@@ -98,56 +99,11 @@
                         if (a.length == 1) {
                             window.location.href = a.attr("href");
                         }
-                    },
-                    doubleTap: function(event, target) {
-                        var $target = $(target);
-                        if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function' && $target.hasClass('wa72slide_image')) {
-                            $target.wa72zoomer('toggleZoom');
-                        }
                     }
-
                 });
-                if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function') {
-                    slideframe.on('afterSwitch', function() {
-                        slider.content.find('img.wa72slide_image').wa72zoomer('reset');
-                        var $cs = slider.getCurrentSlide().find('img.wa72slide_image');
-                        if ($cs.length) {
-                            var i = new Image;
-                            i.src = $cs.attr('src');
-                            i.onload = function(){
-                                // allow maxScale up to the pixel dimensions of the original image
-                                var maxScale = Math.max(i.width / $cs.width(), i.height / $cs.height());
-                                $cs.wa72zoomer({
-                                    'minScale': 1,
-                                    'maxScale': maxScale
-                                });
-                                $cs.swipe({
-                                    pinchIn: function(event, direction, distance, duration, fingerCount, pinchZoom)
-                                    {
-                                        $cs.wa72zoomer('zoom', pinchZoom);
-                                    },
-                                    pinchOut: function(event, direction, distance, duration, fingerCount, pinchZoom)
-                                    {
-                                        $cs.wa72zoomer('zoom', pinchZoom);
-                                    },
-                                    fingers: 2
-                                });
-                                if (typeof $.fn.mousewheel == 'function') {
-                                    $cs.mousewheel(function(event, delta, deltaX, deltaY) {
-                                        if (deltaY > 0) {
-                                            $cs.wa72zoomer('zoom', false,
-                                                {'middle': {pageX: event.pageX, pageY: event.pageY}});
-                                        } else {
-                                            $cs.wa72zoomer('zoom', true,
-                                                {'middle': {pageX: event.pageX, pageY: event.pageY}});
-                                        }
-                                    });
-                                }
-                            };
-                        }
-                    });
-                }
+                // save the slider instance on the element
+                $.data(this, dataname, slider);
             }
         });
-    }
+    };
 }));

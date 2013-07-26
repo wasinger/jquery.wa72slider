@@ -2,8 +2,8 @@
  * wa72Slider
  *
  * A basic swipe slider object.
- * This object handles sliding of content elements within an element acting as 'frame'.
- * All actions need to be triggered by calling exported functions like prev() or next()
+ * This object handles sliding of content elements within an container element acting as 'frame'.
+ * All actions need to be triggered by calling methods like prev() or next()
  * because this slider object does not bind to input (touch, mouse) events by itself.
  *
  * Copyright 2013 Christoph Singer, Web-Agentur 72
@@ -18,34 +18,38 @@
         root.wa72Slider = factory(jQuery);
     }
 } (this, function ($) {
-    var dataname = 'wa72slider';
 
-    function Slider(frame, slides, settings){
-        var instance = $.data(frame, dataname);
-        if (instance && instance instanceof Slider) {
-            return instance;
-        }
+    var defaults = {
+        "duration": 2000,
+        "csstrans": false,
+        "debug": false,
+        "loop": false,
+        "autoplay": false,
+        "showNavButtons": false,
+        "easing": "cubic-bezier(.19, 0, .42, 1)"
+    };
+
+    function Slider(frame, slides, options){
         if (!(this instanceof Slider)) {
-            return new Slider(frame, slides, settings);
+            return new Slider(frame, slides, options);
         }
+        this.config = $.extend(defaults, options);
         this.frame = $(frame);
         this.frame.css({
-            'position': 'relative',
+            'position': this.frame.css('position') == 'absolute' ? 'absolute' : 'relative',
             'overflow': 'hidden'
         });
         this.width = this.frame.width();
         this.height = this.frame.height();
-        this.settings = settings;
         this.content = $('<div class="wa72slider_content">');
         for(var i=0;i<slides.length;i++) {
             this._addSlide(slides[i]);
         }
         this._show();
         // add navigation buttons
-        if (settings.showNavButtons) {
+        if (this.config.showNavButtons) {
             this._addNavigationButtons();
         }
-        $.data(frame, dataname, this);
         return this;
     }
     Slider.prototype = {
@@ -57,16 +61,16 @@
 
         'goTo': function(n, duration) {
             if (this.sliding) return;
-            duration = duration ? duration : this.settings.duration;
+            duration = duration ? duration : this.config.duration;
             this._beforeSwitch();
             if (n < 1) {
-                this.current = (this.settings.loop ? 0 : 1);
+                this.current = (this.config.loop ? 0 : 1);
             } else if (n > this.nos) {
-                this.current = (this.settings.loop ? this.nos + 1 : this.nos);
+                this.current = (this.config.loop ? this.nos + 1 : this.nos);
             } else {
                 this.current = n;
             }
-            if (this.settings.debug && window.console) window.console.log('Current slide: ' + this.current);
+            if (this.config.debug && window.console) window.console.log('Current slide: ' + this.current);
             var s = this;
             this._move(this._pos(this.current), duration, function(){Slider.prototype._afterSwitch.call(s);});
         },
@@ -99,39 +103,39 @@
         },
         "_show": function() {
             this.frame.empty().append(this.content);
-            if (this.settings.loop) {
+            if (this.config.loop) {
                 var fc = this.content.children('div.wa72slider_slide').first().clone();
                 this.content.prepend(this.content.children('div.wa72slider_slide').last().clone());
                 this.content.append(fc);
             }
             this.content.css({
                 'position': 'relative', 'top': 0, 'left': 0
-            }).height(this.height).width((this.settings.loop ? this.nos + 2 : this.nos) * this.width);
-            if (this.settings.csstrans) {
+            }).height(this.height).width((this.config.loop ? this.nos + 2 : this.nos) * this.width);
+            if (this.config.csstrans) {
                 this.content.css({
                     "transitionProperty": "transform",
-                    "transitionDuration": this.settings.duration + "ms",
-                    "transitionTimingFunction": this.settings.easingClick,
+                    "transitionDuration": this.config.duration + "ms",
+                    "transitionTimingFunction": this.config.easing,
                     "transform": "translate3d(0,0,0)"
                 });
                 this.content.find('img').css("transform", "translate3d(0,0,0)");
             }
             this.current = 1;
             this._fastmove(this._pos(1));
-            if (this.settings.autoplay > 0) {
+            if (this.config.autoplay > 0) {
                 var s = this;
-                this.autoplay = window.setInterval(function(){Slider.prototype.next.call(s);}, this.settings.autoplay);
+                this.autoplay = window.setInterval(function(){Slider.prototype.next.call(s);}, this.config.autoplay);
             }
         },
 
         '_pos': function(no) {
-            if (!this.settings.loop) {
+            if (!this.config.loop) {
                 no = Math.max(no - 1, 0);
             }
             return no * this.width;
         },
         '_move': function(pos, duration, callback) {
-            if (this.settings.csstrans) {
+            if (this.config.csstrans) {
                 this.content.css('transitionDuration', duration + 'ms');
                 if (typeof callback === 'function') {
                     this.content.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', callback);
@@ -142,7 +146,7 @@
             }
         },
         '_fastmove': function(pos) {
-            if (this.settings.csstrans) {
+            if (this.config.csstrans) {
                 this.content.css('transitionDuration', '0ms');
                 this.content.css('transform', 'translate(' + (-pos) + 'px,0)');
             } else {
@@ -157,9 +161,9 @@
 
         // callback function after switching slides
         '_afterSwitch': function() {
-            if (this.settings.loop && (this.current === 0 || this.current === this.nos + 1)) {
+            if (this.config.loop && (this.current === 0 || this.current === this.nos + 1)) {
                 this.current = ((this.current === 0) ? (this.nos) : 1);
-                if (this.settings.debug && window.console) window.console.log('Looping, current slide: ' + this.current);
+                if (this.config.debug && window.console) window.console.log('Looping, current slide: ' + this.current);
                 this._fastmove(this._pos(this.current));
             }
             this.sliding = false;
@@ -173,8 +177,8 @@
             nb.addClass('wa72slider_nextbutton').css('right', 0);
             this.frame.append(pb).append(nb);
             var showNavButtons = function() {
-                if (slider.settings.loop || slider.current > 1) pb.show();
-                if (slider.settings.loop || slider.current < (slider.nos)) nb.show();
+                if (slider.config.loop || slider.current > 1) pb.show();
+                if (slider.config.loop || slider.current < (slider.nos)) nb.show();
             };
             var hideNavButtons = function() {
                 pb.hide();
@@ -186,9 +190,9 @@
 
             var preChange = function() {
                 if (slider.autoplay) clearInterval(slider.autoplay);
-                if (slider.settings.csstrans) {
+                if (slider.config.csstrans) {
                     slider.content.css({
-                        "transitionTimingFunction": slider.settings.easingClick
+                        "transitionTimingFunction": slider.config.easing
                     });
                 }
             };
