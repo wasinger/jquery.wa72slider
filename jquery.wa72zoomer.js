@@ -7,8 +7,13 @@
  * Released under the MIT license
  * https://github.com/timmywil/jquery.panzoom
  */
-
-(function ($) {
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else {
+        root.wa72zoomer = factory(jQuery);
+    }
+} (this, function ($) {
     var dataname = 'wa72zoomer';
 
     var floating = '(\\-?[\\d\\.e]+)';
@@ -394,4 +399,6 @@
         }
         return this.each(function() { new Zoomer( this, options ); });
     };
-})(jQuery);
+
+    return Zoomer;
+}));
