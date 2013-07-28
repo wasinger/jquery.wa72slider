@@ -32,7 +32,7 @@
         }, options);
         settings.easing = settings.easingClick;
         var slides = [],
-            slideframe = $('<div id="wa72SwipeGalleryFrame" style="display:none;background-color:black;position:absolute;top:0;bottom:0;left:0;right:0;z-index:1000;width:100%;height:100%"></div>');
+            slideframe = $('<div id="wa72SwipeGalleryFrame" style="display:none;position:fixed;background-color:black;top:0;bottom:0;left:0;right:0;z-index:1000;width:100%;height:100%"></div>');
         slideframe.appendTo($('body'));
 
         this.each(function() {

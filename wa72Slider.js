@@ -35,10 +35,10 @@
         }
         this.config = $.extend(defaults, options);
         this.frame = $(frame);
-        this.frame.css({
-            'position': this.frame.css('position') == 'absolute' ? 'absolute' : 'relative',
-            'overflow': 'hidden'
-        });
+        this.frame.css('overflow', 'hidden');
+        if (this.frame.css('position') == 'static') {
+            this.frame.css('position', 'relative');
+        }
         this.width = this.frame.width();
         this.height = this.frame.height();
         this.content = $('<div class="wa72slider_content">');
