@@ -2,7 +2,7 @@
  * jQuery wa72SwipeGallery
  *
  * A swipe photo gallery plugin for jQuery for mobile and desktop browsers,
- * supports touch swipe using jquery.touchSwipe.js (https://github.com/mattbryson/TouchSwipe-Jquery-Plugin)
+ * supports touch swipe using hammer.js
  * and mouse wheel zooming using jquery.mousewheel.js (https://github.com/brandonaaron/jquery-mousewheel)
  *
  * Copyright 2013 Christoph Singer, Web-Agentur 72
@@ -29,20 +29,32 @@
             "easingClick": "cubic-bezier(.19, 0, .42, 1)",
             "easingSwipe": "cubic-bezier(.25, .46, .45, .94)",
             "panZoomImages": true
-        }, options);
+        }, options),
+            slides = [],
+            slideframe,
+            slider,
+            setSize
+            ;
         settings.easing = settings.easingClick;
-        var slides = [],
-            slideframe = $('<div id="wa72SwipeGalleryFrame" style="display:none;position:fixed;background-color:black;top:0;bottom:0;left:0;right:0;z-index:1000;width:100%;height:100%"></div>');
-        slideframe.appendTo($('body'));
+        slideframe = $('<div id="wa72SwipeGalleryFrame" style="display:none;position:fixed;background-color:black;top:0;left:0;z-index:1000;width:100%;height:100%;"></div>').appendTo($('body'));
+
+        setSize = function() {
+            slideframe.width($(window).width());
+            slideframe.height(navigator.userAgent.match(/(iPad|iPhone|iPod)/i) ? window.innerHeight : $(window).height());
+        };
+        $(window).on("load resize orientationchange", function() {
+            setSize();
+            //updateOffset();
+        });
 
         this.each(function() {
-            var $this = $(this), i = $(new Image);
+            var $this = $(this), i = $(new Image), ic = $('<div style="width:100%;height:100%;"></div>').append(i);
             i.attr('src', $this.attr('href'));
             i.css({
                 'max-height': '100%',
                 'max-width': '100%'
             });
-            slides.unshift(i);
+            slides.unshift(ic);
             $this.on('click', function(e) {
                 e.preventDefault();
                 slideframe.show();
@@ -50,11 +62,138 @@
             });
         });
 
-        var slider = new Slider(slideframe, slides, settings);
+        slider = new Slider(slideframe, slides, settings);
 
 
-        // Touch Swipe support: Needs jquery.touchSwipe.js
-        if (typeof $.fn.swipe == 'function') {
+        // Touch Swipe support: Needs jquery.hammer.js
+        if (typeof $.fn.hammer == 'function') {
+            //if (window.console) window.console.log("Hammer detected");
+            function handleHammer(ev) {
+                //if (window.console) window.console.log(ev);
+                // disable browser scrolling
+                ev.gesture.preventDefault();
+                if (slider.sliding) return;
+                if (slider.autoplay) clearInterval(slider.autoplay);
+                if (settings.csstrans) {
+                    slider.content.css({
+                        "transitionTimingFunction": settings.easingSwipe
+                    });
+                }
+                var duration = Math.min(settings.duration * 2, ev.gesture.deltaTime / Math.abs(ev.gesture.deltaX) * slider.width);
+
+                switch(ev.type) {
+                    case 'dragright':
+                    case 'dragleft':
+                        window.console.log("dragged");
+                        slider._move((slider._pos(slider.current)) - ev.gesture.deltaX, 0);
+                        break;
+
+                    case 'swipeleft':
+                        slider.next(duration);
+                        ev.gesture.stopDetect();
+                        break;
+
+                    case 'swiperight':
+                        slider.prev(duration);
+                        ev.gesture.stopDetect();
+                        break;
+
+                    case 'release':
+                        // more than 50% moved, navigate
+                        if(Math.abs(ev.gesture.deltaX) > slider.width/2) {
+                            if(ev.gesture.direction == 'right') {
+                                slider.prev(duration);
+                            } else {
+                                slider.next(duration);
+                            }
+                        }
+                        else {
+                            duration = Math.min(settings.duration, settings.duration * Math.abs(ev.gesture.deltaX) / slider.width);
+                            slider._move(slider._pos(slider.current), duration);
+                        }
+                        break;
+                }
+            }
+            slider.content.hammer({'drag_lock_to_axis': true});
+            slider.content.on('release dragleft dragright swipeleft swiperight', handleHammer);
+
+            if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function') {
+                var init = function() {
+                    slider.content.find('img').css('transform', 'none')/*.wa72zoomer('reset')*/;
+                    var $cs = slider.getCurrentSlide().find('img');
+
+                    if ($cs.length) {
+                        var i = new Image, matrix, scale;
+                        $cs.wa72zoomer({
+                            'minScale': 1
+                        });
+                        i.src = $cs.attr('src');
+                        i.onload = function(){
+                            // allow maxScale up to the pixel dimensions of the original image
+                            var maxScale = Math.max(i.width / $cs.width(), i.height / $cs.height());
+                            $cs.wa72zoomer({
+                                'minScale': 1,
+                                'maxScale': maxScale
+                            });
+                        };
+                        $cs.hammer({
+                            transform_always_block: true,
+                            transform_min_scale: 1,
+                            drag_block_horizontal: true,
+                            drag_block_vertical: true,
+                            drag_min_distance: 0
+                        });
+                        $cs.on('dragstart drag pinch release dragleft dragright doubletap', function(ev) {
+                            if (ev.gesture && ev.gesture.preventDefault) ev.gesture.preventDefault();
+                            switch(ev.type) {
+                                case 'pinch':
+                                    alert('Pinch sclae: ' + ev.gesture.scale);
+                                    $cs.wa72zoomer('zoom', scale * ev.gesture.scale, {'middle': {pageX: ev.pageX, pageY: ev.pageY}});
+                                    break;
+                                case 'dragstart':
+                                    matrix = $cs.wa72zoomer('getMatrix');
+                                    scale = matrix ? +matrix[0] : 1;
+                                    break;
+                                case 'drag':
+                                    if (scale > 1) {
+                                        var x = +matrix[4] + ev.gesture.deltaX;
+                                        var y = +matrix[5] + ev.gesture.deltaY;
+                                        window.console.log('pan: ' + x + ";" + y);
+                                        $cs.wa72zoomer('pan',  x,  y, {'relative': false, 'animate': false});
+                                        ev.stopPropagation();
+                                    }
+                                    break;
+                                case 'dragleft':
+                                case 'dragright':
+                                case 'release':
+                                    if (scale > 1) ev.stopPropagation();
+                                    break;
+                                case 'doubletap':
+                                    $cs.wa72zoomer('toggleZoom');
+                            }
+                        });
+                        // mouse wheel zoom: needs jquery.mousewheel.js
+                        if (typeof $.fn.mousewheel == 'function') {
+                            $cs.mousewheel(function(event, delta, deltaX, deltaY) {
+                                event.preventDefault();
+                                if (deltaY > 0) {
+                                    $cs.wa72zoomer('zoom', false,
+                                        {'middle': {pageX: event.pageX, pageY: event.pageY}});
+                                } else {
+                                    $cs.wa72zoomer('zoom', true,
+                                        {'middle': {pageX: event.pageX, pageY: event.pageY}});
+                                }
+                            });
+                        }
+
+                    }
+                };
+                init();
+                slideframe.on('afterSwitch', init);
+            }
+
+/*        // Touch Swipe support: Needs jquery.hammer.js
+        if (typeof $.fn.hammer == 'function') {
             var matrix, scale;
             var swipeStatus = function(event, phase, direction, distance, duration) {
                 if (slider.sliding) return;
@@ -114,8 +253,8 @@
                     }
                 }
 
-            });
-            if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function') {
+            });*/
+/*            if (settings.panZoomImages && typeof $.fn.wa72zoomer == 'function') {
                 slideframe.on('afterSwitch', function() {
                     slider.content.find('img').wa72zoomer('reset');
                     var $cs = slider.getCurrentSlide().find('img');
@@ -156,7 +295,7 @@
                         };
                     }
                 });
-            }
+            }*/
         }
     }
 }));

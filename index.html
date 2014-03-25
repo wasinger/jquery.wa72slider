@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Slider Test Page</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
-    <script src="https://raw.github.com/mattbryson/TouchSwipe-Jquery-Plugin/master/jquery.touchSwipe.min.js"></script>
-    <script src="https://raw.github.com/brandonaaron/jquery-mousewheel/master/jquery.mousewheel.js"></script>
+    <script src="vendor/jquery-1.10.2.min.js"></script>
+    <script src="vendor/Modernizr.custom.js"></script>
+    <!--<script src="https://raw.github.com/mattbryson/TouchSwipe-Jquery-Plugin/master/jquery.touchSwipe.min.js"></script>-->
+    <script type="text/javascript" src="vendor/hammer.js"></script>
+    <script type="text/javascript" src="vendor/jquery.hammer.js"></script>
+    <script type="text/javascript" src="vendor/jquery.mousewheel.js"></script>
     <script type="text/javascript" src="wa72Slider.js"></script>
     <script type="text/javascript" src="jquery.wa72zoomer.js"></script>
     <script type="text/javascript" src="jquery.wa72Slider.js"></script>
@@ -33,6 +35,14 @@
             text-align: center;
             font-family: Arial, sans-serif;
         }
+
+/*        .wa72slider_slide {
+            display: table-cell !important;
+        }
+        .wa72slider_slide img {
+            text-align: center;
+            vertical-align: middle;
+        }*/
     </style>
 </head>
 <body>
@@ -43,7 +53,7 @@
     <div style="background-color: green;">Slide 3</div>
     <div>Slide 4</div>
     <img class="wa72slide_image" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Cabo_Espichel%2C_Portugal%2C_2012-08-18%2C_DD_08.JPG/1280px-Cabo_Espichel%2C_Portugal%2C_2012-08-18%2C_DD_08.JPG" title="von Poco a poco (Eigenes Werk) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons" style="max-height: 100%; max-width: 100%; margin: auto;">
-    <div>Slide 6</div>
+    <div><a href="/notfound">Slide 6</a></div>
 </div>
     <h1>Gallery</h1>
     <ul class="gallery">
@@ -65,7 +75,23 @@
                 <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Lago_di_Salina.jpg/256px-Lago_di_Salina.jpg">
             </a>
         </li>
+<!--        <li>
+            <a href="../test_hektor/bilder/test1.jpg"><img src="../test_hektor/bilder/test1.jpg" style="height:120px;width:auto;"></a>
+        </li>
+        <li>
+            <a href="../test_hektor/bilder/test10.jpg"><img src="../test_hektor/bilder/test10.jpg" style="height:120px;width:auto;"></a>
+        </li>
+        <li>
+            <a href="../test_hektor/bilder/test14.jpg"><img src="../test_hektor/bilder/test14.jpg" style="height:120px;width:auto;"></a>
+        </li>
+        <li>
+            <a href="../test_hektor/bilder/test30.jpg"><img src="../test_hektor/bilder/test30.jpg" style="height:120px;width:auto;"></a>
+        </li>
+        <li>
+            <a href="../test_hektor/bilder/test31.jpg"><img src="../test_hektor/bilder/test31.jpg" style="height:120px;width:auto;"></a>
+        </li>-->
     </ul>
+
 <script type="text/javascript">
     $('#frame').wa72Slider({
         //'loop': false

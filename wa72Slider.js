@@ -116,9 +116,9 @@
                     "transitionProperty": "transform",
                     "transitionDuration": this.config.duration + "ms",
                     "transitionTimingFunction": this.config.easing,
-                    "transform": "translate3d(0,0,0)"
+                    "transform": "translate3d(0,0,0) scale3d(1,1,1)"
                 });
-                this.content.find('img').css("transform", "translate3d(0,0,0)");
+                //this.content.find('img').css("transform", "translate3d(0,0,0) scale3d(1,1,1)");
             }
             this.current = 1;
             this._fastmove(this._pos(1));

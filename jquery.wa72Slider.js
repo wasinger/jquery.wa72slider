@@ -2,7 +2,7 @@
  * jQuery.wa72Slider
  *
  * A content slider plugin for jQuery for mobile and desktop browsers,
- * supports touch swipe using jquery.touchSwipe.js (https://github.com/mattbryson/TouchSwipe-Jquery-Plugin)
+ * supports touch swipe using jquery.hammer.js
  *
  * Copyright 2013 Christoph Singer, Web-Agentur 72
  *
@@ -58,50 +58,55 @@
                 slides = slideframe.children(settings.slideselector);
             slider = new Slider(this, slides, settings);
 
-            // Touch Swipe support: Needs jquery.touchSwipe.js
-            if (typeof $.fn.swipe == 'function') {
-                slideframe.on('click', 'a', function(e){e.preventDefault()});
-                var swipeStatus = function(event, phase, direction, distance, duration) {
+            // Touch Swipe support: Needs jquery.hammer.js
+            if (typeof $.fn.hammer == 'function') {
+                //if (window.console) window.console.log("Hammer detected");
+                function handleHammer(ev) {
+                    //if (window.console) window.console.log(ev);
+                    // disable browser scrolling
+                    ev.gesture.preventDefault();
                     if (slider.sliding) return;
-                    if (phase == "move" && (direction == "left" || direction == "right")) {
-                        duration = 0;
-                        if (direction == "left")
-                            slider._move((slider._pos(slider.current)) + distance, duration);
-                        else if (direction == "right")
-                            slider._move((slider._pos(slider.current)) - distance, duration);
+                    if (slider.autoplay) clearInterval(slider.autoplay);
+                    if (settings.csstrans) {
+                        slider.content.css({
+                            "transitionTimingFunction": settings.easingSwipe
+                        });
                     }
-                    else if (phase == "end" && distance >= 75) {
-                        if (slider.autoplay) clearInterval(slider.autoplay);
-                        if (settings.csstrans) {
-                            slider.content.css({
-                                "transitionTimingFunction": settings.easingSwipe
-                            });
-                        }
-                        duration = Math.min(settings.duration * 2, duration / distance * slider.width);
-                        if (direction == "right")
-                            slider.prev(duration);
-                        else if (direction == "left")
+                    var duration = Math.min(settings.duration * 2, ev.gesture.deltaTime / Math.abs(ev.gesture.deltaX) * slider.width);
+                    switch(ev.type) {
+                        case 'dragright':
+                        case 'dragleft':
+                            slider._move((slider._pos(slider.current)) - ev.gesture.deltaX, 0);
+                            break;
+
+                        case 'swipeleft':
                             slider.next(duration);
-                    } else {
-                        duration = Math.min(settings.duration, settings.duration * distance / slider.width * 2);
-                        slider._move(slider._pos(slider.current), duration);
+                            ev.gesture.stopDetect();
+                            break;
+
+                        case 'swiperight':
+                            slider.prev(duration);
+                            ev.gesture.stopDetect();
+                            break;
+
+                        case 'release':
+                            // more than 50% moved, navigate
+                            if(Math.abs(ev.gesture.deltaX) > slider.width/2) {
+                                if(ev.gesture.direction == 'right') {
+                                    slider.prev(duration);
+                                } else {
+                                    slider.next(duration);
+                                }
+                            }
+                            else {
+                                duration = Math.min(settings.duration, settings.duration * Math.abs(ev.gesture.deltaX) / slider.width);
+                                slider._move(slider._pos(slider.current), duration);
+                            }
+                            break;
                     }
-                };
-                slider.content.swipe({
-                    triggerOnTouchEnd: true,
-                    swipeStatus: swipeStatus,
-                    allowPageScroll: 'vertical',
-                    threshold: 75,
-                    cancelTreshold: 15,
-                    excludedElements: '',
-                    tap: function(event, target) {
-                        var a = $(target).parents('a');
-                        if (a.length == 1) {
-                            window.location.href = a.attr("href");
-                        }
-                    }
-                });
-                // save the slider instance on the element
+                }
+                slider.content.hammer({'drag_lock_to_axis': true});
+                slider.content.on('release dragleft dragright swipeleft swiperight', handleHammer);
                 $.data(this, dataname, slider);
             }
         });

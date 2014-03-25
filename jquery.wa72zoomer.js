@@ -31,6 +31,7 @@
     function Zoomer(e, o) {
         var instance = $.data(e, dataname);
         if (instance && instance instanceof Zoomer) {
+            $.extend(instance.options, o);
             return instance;
         }
         if (!(this instanceof Zoomer)) {
