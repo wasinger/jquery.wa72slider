@@ -28,7 +28,8 @@
             "showNavButtons": true,
             "easingClick": "cubic-bezier(.19, 0, .42, 1)",
             "easingSwipe": "cubic-bezier(.25, .46, .45, .94)",
-            "panZoomImages": true
+            "panZoomImages": true,
+            "bindKeys": true
         }, options),
             slides = [],
             slideframe,
@@ -48,7 +49,7 @@
         });
 
         this.each(function() {
-            var $this = $(this), i = $(new Image), ic = $('<div style="width:100%;height:100%;"></div>').append(i);
+            var $this = $(this), i = $(new Image), ic = $('<figure class="wa72SwipeGallerySlide"></figure>').append(i);
             i.attr('src', $this.attr('href'));
             i.css({
                 'max-height': '100%',
@@ -64,6 +65,22 @@
 
         slider = new Slider(slideframe, slides, settings);
 
+        if (settings.bindKeys) {
+            $(document).keydown(function(e) {
+                switch(e.which) {
+                    case 37: // left
+                        slider.prev();
+                        break;
+                    case 38: // up
+                        break;
+                    case 39: // right
+                        slider.next();
+                        break;
+                    default: return; // exit this handler for other keys
+                }
+                e.preventDefault(); // prevent the default action (scroll / move caret)
+            });
+        }
 
         // Touch Swipe support: Needs jquery.hammer.js
         if (typeof $.fn.hammer == 'function') {
@@ -147,7 +164,6 @@
                             if (ev.gesture && ev.gesture.preventDefault) ev.gesture.preventDefault();
                             switch(ev.type) {
                                 case 'pinch':
-                                    alert('Pinch sclae: ' + ev.gesture.scale);
                                     $cs.wa72zoomer('zoom', scale * ev.gesture.scale, {'middle': {pageX: ev.pageX, pageY: ev.pageY}});
                                     break;
                                 case 'dragstart':

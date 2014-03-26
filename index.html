@@ -13,6 +13,7 @@
     <script type="text/javascript" src="jquery.wa72zoomer.js"></script>
     <script type="text/javascript" src="jquery.wa72Slider.js"></script>
     <script type="text/javascript" src="jquery.wa72SwipeGallery.js"></script>
+    <link rel="stylesheet" href="wa72Slider.css">
     <style type="text/css">
         #frame {
             width: 500px;
@@ -35,14 +36,6 @@
             text-align: center;
             font-family: Arial, sans-serif;
         }
-
-/*        .wa72slider_slide {
-            display: table-cell !important;
-        }
-        .wa72slider_slide img {
-            text-align: center;
-            vertical-align: middle;
-        }*/
     </style>
 </head>
 <body>
@@ -58,38 +51,41 @@
     <h1>Gallery</h1>
     <ul class="gallery">
         <li>
-            <a href="http://upload.wikimedia.org/wikipedia/commons/2/21/Neophron_percnopterus_-_01.jpg"
-               title="By Kadellar (Own work) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons">
-                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Neophron_percnopterus_-_01.jpg/256px-Neophron_percnopterus_-_01.jpg">
+            <a href="http://upload.wikimedia.org/wikipedia/commons/thumb/3/34/T%C3%BCbingen_Neckarinsel_3.JPG/1280px-T%C3%BCbingen_Neckarinsel_3.JPG"
+               title="Platanenallee Tübingen, Public Domain, via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/3/34/T%C3%BCbingen_Neckarinsel_3.JPG/320px-T%C3%BCbingen_Neckarinsel_3.JPG">
             </a>
         </li>
         <li>
-            <a href="http://upload.wikimedia.org/wikipedia/commons/7/7f/Isla_Pan_de_Azucar.jpg"
-               title="By Bachelot Pierre J-P (Own work) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons">
-                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Isla_Pan_de_Azucar.jpg/256px-Isla_Pan_de_Azucar.jpg">
+            <a href="http://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/T%C3%BCbingen%2C_Neckar%2C_H%C3%B6lderlinturm_IMG_5192.JPG/1280px-T%C3%BCbingen%2C_Neckar%2C_H%C3%B6lderlinturm_IMG_5192.JPG"
+               title="Hölderlinturm Tübingen, von Hedwig Storch (Eigenes Werk) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/T%C3%BCbingen%2C_Neckar%2C_H%C3%B6lderlinturm_IMG_5192.JPG/320px-T%C3%BCbingen%2C_Neckar%2C_H%C3%B6lderlinturm_IMG_5192.JPG">
             </a>
         </li>
         <li>
-            <a href="http://upload.wikimedia.org/wikipedia/commons/4/49/Lago_di_Salina.jpg"
-               title="By Ghost-in-the-Shell (Lago di Salina  Uploaded by Markos90) [CC-BY-2.0 (http://creativecommons.org/licenses/by/2.0)], via Wikimedia Commons">
-                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Lago_di_Salina.jpg/256px-Lago_di_Salina.jpg">
+            <a href="http://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/TubingenHolzmarkt.jpg/1280px-TubingenHolzmarkt.jpg"
+               title="Holzmarkt Tübingen, von Jorge1767 (Eigenes Werk) [Public domain], via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/TubingenHolzmarkt.jpg/320px-TubingenHolzmarkt.jpg">
             </a>
         </li>
-<!--        <li>
-            <a href="../test_hektor/bilder/test1.jpg"><img src="../test_hektor/bilder/test1.jpg" style="height:120px;width:auto;"></a>
+        <li>
+            <a href="http://upload.wikimedia.org/wikipedia/commons/e/e5/T%C3%BCbingen_Burgsteige.JPG"
+               title="Burgsteige Tübingen, Public Domain, via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/T%C3%BCbingen_Burgsteige.JPG/180px-T%C3%BCbingen_Burgsteige.JPG">
+            </a>
         </li>
         <li>
-            <a href="../test_hektor/bilder/test10.jpg"><img src="../test_hektor/bilder/test10.jpg" style="height:120px;width:auto;"></a>
+            <a href="http://upload.wikimedia.org/wikipedia/commons/9/94/T%C3%BCbingen_H%C3%B6lderlinturm_02.jpg"
+               title="Hölderlinturm Tübingen, von Wamito (Eigenes Werk) [Public domain], via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/9/94/T%C3%BCbingen_H%C3%B6lderlinturm_02.jpg/180px-T%C3%BCbingen_H%C3%B6lderlinturm_02.jpg">
+            </a>
         </li>
         <li>
-            <a href="../test_hektor/bilder/test14.jpg"><img src="../test_hektor/bilder/test14.jpg" style="height:120px;width:auto;"></a>
+            <a href="http://upload.wikimedia.org/wikipedia/commons/thumb/8/83/T%C3%BCbingen_Neckarfront_3.JPG/1280px-T%C3%BCbingen_Neckarfront_3.JPG"
+               title="Neckarfront Tübingen, Public Domain, via Wikimedia Commons">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/8/83/T%C3%BCbingen_Neckarfront_3.JPG/320px-T%C3%BCbingen_Neckarfront_3.JPG">
+            </a>
         </li>
-        <li>
-            <a href="../test_hektor/bilder/test30.jpg"><img src="../test_hektor/bilder/test30.jpg" style="height:120px;width:auto;"></a>
-        </li>
-        <li>
-            <a href="../test_hektor/bilder/test31.jpg"><img src="../test_hektor/bilder/test31.jpg" style="height:120px;width:auto;"></a>
-        </li>-->
     </ul>
 
 <script type="text/javascript">
